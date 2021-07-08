@@ -115,11 +115,19 @@ cartOverlay.addEventListener("click", (event) => {
 
 subheaderСart.addEventListener("click", cartModalOpen);
 
+// goods page
 try {
   const goodsList = document.querySelector(".goods__list");
   if (!goodsList) {
     throw Error("This is not a goods page");
   }
+
+  const goodsTitle = document.querySelector(".goods__title");
+  const changeTitle = () => {
+    goodsTitle.textContent = document.querySelector(
+      `[href*="#${hash}"]`
+    ).textContent;
+  };
 
   const createCard = ({ id, preview, cost, brand, name, sizes }) => {
     const li = document.createElement("li");
@@ -156,18 +164,13 @@ try {
     });
   };
 
+  // render page according to has + change hash every time you changes a page
   window.addEventListener("hashchange", () => {
-    // change goods__title with changing page
-    const navLink = document.querySelectorAll(
-      `a[href='${location.pathname.substring(1)}${location.hash}']`
-    );
-    const goodsTitle = document.querySelector(".goods__title");
-    goodsTitle.innerHTML = `${navLink[0].innerHTML}`;
-
-    // render page according to has + change hash every time you changes a page
     hash = location.hash.substring(1);
     getGoods(renderGoodsList, hash);
+    changeTitle();
   });
+
   getGoods(renderGoodsList, hash);
 } catch (err) {
   console.warn(err);
