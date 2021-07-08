@@ -49,6 +49,43 @@ const cartModalClose = () => {
   enableScroll();
 };
 
+// database request universal function to get data or get error
+
+const getData = async () => {
+  const data = await fetch("db2.json");
+
+  if (data.ok) {
+    return data.json();
+  } else {
+    throw new Error(
+      `Данные не были получены, ошибка ${data.status} ${data.statusText}`
+    );
+  }
+};
+
+const getGoods = (callback) => {
+  getData()
+    .then((data) => {
+      callback(data);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+};
+
+getGoods((data) => {
+  console.warn(data);
+});
+
+// getData().then(
+//   (data) => {
+//     console.log(data);
+//   },
+//   (err) => {
+//     console.err(err);
+//   }
+// );
+
 // Close modal windows by escape
 document.addEventListener("keydown", (event) => {
   const keyCode = event.code;
