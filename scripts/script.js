@@ -1,5 +1,7 @@
 // Your city
 const headerCityButton = document.querySelector(".header__city-button");
+const cartListGoods = document.querySelector(".cart__list-goods");
+const cartTotalCost = document.querySelector(".cart__total-cost");
 
 let hash = location.hash.substring(1);
 
@@ -11,6 +13,51 @@ headerCityButton.addEventListener("click", () => {
   headerCityButton.textContent = city;
   localStorage.setItem("lamoda-location", city);
 });
+
+// render basket
+const renderCart = () => {
+  cartListGoods.textContent = "";
+  const cartItems = getLocalStorage();
+  let totalPrice = 0;
+
+  cartItems.forEach((item, i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${item.brand} ${item.name}</td>
+      ${item.color ? `<td>${item.color}</td>` : `<td>-</td>`}
+      ${item.size ? `<td>${item.size}</td>` : `<td>-</td>`}
+      <td>${item.cost} &#8381;</td>
+      <td><button class="btn-delete" data-id="${item.id}">&times;</button></td>
+    `;
+    totalPrice += item.cost;
+    cartListGoods.append(tr);
+  });
+
+  cartTotalCost.textContent = `${totalPrice} ₽`;
+};
+
+// delete item from basket
+const deleteItemCart = (id) => {
+  const cartItems = getLocalStorage();
+  const newCartItems = cartItems.filter((item) => item.id !== id);
+  setLocalStorage(newCartItems);
+};
+
+cartListGoods.addEventListener("click", (e) => {
+  if (e.target.matches(".btn-delete")) {
+    deleteItemCart(e.target.dataset.id);
+    renderCart();
+  }
+});
+
+// functions to work with local storage
+const getLocalStorage = () =>
+  JSON?.parse(localStorage.getItem("cart-lamoda")) || [];
+
+const setLocalStorage = (data) => {
+  localStorage.setItem("cart-lamoda", JSON.stringify(data));
+};
 
 // block scroll - universal functions
 const disableScroll = () => {
@@ -44,6 +91,7 @@ const cartBtnClose = document.querySelector(".cart__btn-close");
 const cartModalOpen = () => {
   cartOverlay.classList.add("cart-overlay-open");
   disableScroll();
+  renderCart();
 };
 
 const cartModalClose = () => {
@@ -114,6 +162,8 @@ cartOverlay.addEventListener("click", (event) => {
 });
 
 subheaderСart.addEventListener("click", cartModalOpen);
+
+// render bascket
 
 // goods page
 try {
@@ -196,15 +246,18 @@ try {
   const cardGoodSizes = document.querySelector(".card-good__sizes");
   const cardGoodSizesList = document.querySelector(".card-good__sizes-list");
   const cardGoodBuy = document.querySelector(".card-good__buy");
+  console.log(cardGoodBuy);
 
   const generateList = (data) =>
     data.reduce(
-      (html, item, index) =>
+      (html, item, i) =>
         html + `<li class="card-good__select-item" data-id=${i}>${item}</li>`,
       ""
     );
 
-  const renderCardGood = ([{ brand, name, cost, color, sizes, photo }]) => {
+  const renderCardGood = ([{ id, brand, name, cost, color, sizes, photo }]) => {
+    const data = { brand, name, cost, id };
+
     cardGoodImage.src = `goods-image/${photo}`;
     cardGoodImage.alt = `${brand} + ${name}`;
     cardGoodBrand.textContent = brand;
@@ -226,6 +279,32 @@ try {
     } else {
       cardGoodSizes.style.display = "none";
     }
+
+    if (getLocalStorage().some((item) => item.id === id)) {
+      cardGoodBuy.classList.add("delete");
+      cardGoodBuy.textContent = "Удалить из корзины";
+    }
+    cardGoodBuy.addEventListener("click", () => {
+      if (cardGoodBuy.classList.contains("delete")) {
+        deleteItemCart(id);
+        cardGoodBuy.classList.remove("delete");
+        cardGoodBuy.textContent = "Добавить в корзину";
+        return;
+      }
+      if (color) {
+        data.color = cardGoodColor.textContent;
+      }
+      if (sizes) {
+        data.size = cardGoodSizes.textContent;
+      }
+
+      cardGoodBuy.classList.add("delete");
+      cardGoodBuy.textContent = "Удалить из корзины";
+
+      const cardData = getLocalStorage(); // get data
+      cardData.push(data); // push product into object
+      setLocalStorage(cardData); //push data again to localstorage
+    });
   };
 
   cardGoodSelectWrapper.forEach((item) => {
@@ -244,7 +323,7 @@ try {
       }
     });
   });
-  cardGoodSelectWrapper;
+
   getGoods(renderCardGood, "id", hash);
 } catch (err) {
   console.warn(err);
